@@ -55,9 +55,9 @@ NICHES = {
     "ecommerce": {
         "label": "E-commerce & Boutiques en ligne",
         "hashtags": [
-            "ecommercefrance", "boutiqueenligne",
-            "venteenligne", "shopfrance",
-            "marquefrancaise"
+            "boutiqueenligne", "shopenligne",
+            "ventenligne", "modeboutique",
+            "accessoiresfemme"
         ],
         "google_keywords": [
             "boutique vêtements france instagram commande",
@@ -67,8 +67,9 @@ NICHES = {
     "beaute": {
         "label": "Services Beauté & Esthétique",
         "hashtags": [
-            "institutdebeaute", "estheticienne",
-            "entrepreneurfrancais", "smallbusinessfrance"
+            "estheticienne", "institutbeaute",
+            "soinsvisage", "manchurage",
+            "beautenaturelle"
         ],
         "google_keywords": [
             "esthéticienne france instagram whatsapp",
@@ -78,9 +79,9 @@ NICHES = {
     "coiffure": {
         "label": "Coiffure & Barber Shop",
         "hashtags": [
-            "coiffeurfrance", "businessfrance",
-            "autoentrepreneurfrance",
-            "entrepreneuriatfrance"
+            "coiffeurafro", "coiffeurparis",
+            "barbershop", "coiffeurlyon",
+            "naturalhair"
         ],
         "google_keywords": [
             "coiffeur afro paris instagram",
@@ -90,8 +91,9 @@ NICHES = {
     "photo": {
         "label": "Photographie & Création de contenu",
         "hashtags": [
-            "photographefrance", "freelancefrance",
-            "marketingdigitalfrance"
+            "photographe", "photographieparis",
+            "shootingphoto", "portraitphoto",
+            "contentcreator"
         ],
         "google_keywords": [
             "photographe france instagram tarif DM",
@@ -101,8 +103,9 @@ NICHES = {
     "sport": {
         "label": "Coaching Sportif & Fitness",
         "hashtags": [
-            "coachsportif", "coachingfrance",
-            "entrepreneurfrancais"
+            "coachsportif", "coachingfitness",
+            "musculationfrance", "perte de poids",
+            "personnaltrainer"
         ],
         "google_keywords": [
             "coach sportif france instagram programme",
@@ -113,7 +116,8 @@ NICHES = {
         "label": "Coaching Business & Formation",
         "hashtags": [
             "coachbusiness", "formationenligne",
-            "coachingfrance", "startupfrance"
+            "entrepreneuriat", "mentorat",
+            "developpementpersonnel"
         ],
         "google_keywords": [
             "coach business france instagram formation",
@@ -123,8 +127,9 @@ NICHES = {
     "restauration": {
         "label": "Restauration & Food Business",
         "hashtags": [
-            "restaurantfrance", "foodfrance",
-            "smallbusinessfrance"
+            "restaurant", "foodbusiness",
+            "cuisinefrancaise", "traiteur",
+            "chefcuisinier"
         ],
         "google_keywords": [
             "restaurant france instagram commande whatsapp",
@@ -134,8 +139,9 @@ NICHES = {
     "patisserie": {
         "label": "Pâtisserie & Traiteurs",
         "hashtags": [
-            "patisseriefrancaise", "traiteurfrance",
-            "foodfrance"
+            "patisserie", "gateau",
+            "cakeparis", "patisseriemaison",
+            "traiteurparis"
         ],
         "google_keywords": [
             "pâtisserie france instagram commande",
@@ -145,8 +151,9 @@ NICHES = {
     "immobilier": {
         "label": "Immobilier & Agences",
         "hashtags": [
-            "immobilierfrance", "agentimmobilier",
-            "realestatefrance"
+            "immobilier", "agentimmobilier",
+            "investissementimmobilier", "achatimmobilier",
+            "locationappartement"
         ],
         "google_keywords": [
             "agent immobilier france instagram contact",
@@ -156,8 +163,9 @@ NICHES = {
     "creatifs": {
         "label": "Freelances Créatifs",
         "hashtags": [
-            "freelancefrance", "marketingdigitalfrance",
-            "entrepreneuriatfrance"
+            "graphiste", "videoaste",
+            "designeur", "montagevideos",
+            "creatifdigital"
         ],
         "google_keywords": [
             "graphiste france instagram tarif contact",

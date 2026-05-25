@@ -8,8 +8,6 @@ import uuid
 from tools.quota import quota_manager
 from tools.fetcher import fetch_all_sources
 from tools.enricher import enrich_all_profiles
-from tools.filter_qwen import filter_all_profiles
-from tools.scorer_glm import score_all_profiles
 from tools.blacklist import filter_blacklisted
 from tools.webhook_quota import check_all_keys, SERVICE_STATUS, get_services_summary
 from tools.saver import (
@@ -19,6 +17,8 @@ from tools.saver import (
     format_output
 )
 from config.settings import NICHES, RAPIDAPI_KEY
+from security.auth import require_api_key
+from security.rate_limit import rate_limit
 
 mcp = Blueprint("mcp", __name__)
 
@@ -32,6 +32,8 @@ def run(coro):
 # ─────────────────────────────────────
 
 @mcp.route("/quota", methods=["GET"])
+@require_api_key
+@rate_limit
 def check_quota():
     status = run(quota_manager.get_status())
     return jsonify(status)
@@ -42,6 +44,7 @@ def check_quota():
 # ─────────────────────────────────────
 
 @mcp.route("/niches", methods=["GET"])
+@require_api_key
 def get_niches():
     return jsonify({
         "niches": [
@@ -56,10 +59,11 @@ def get_niches():
 # ─────────────────────────────────────
 
 @mcp.route("/keys/status", methods=["GET"])
+@require_api_key
 def keys_status():
     return jsonify({
-        "services": get_services_summary(),
-        "keys_count": len(RAPIDAPI_KEYS)
+        "services":   get_services_summary(),
+        "keys_count": 1
     })
 
 
@@ -68,6 +72,8 @@ def keys_status():
 # ─────────────────────────────────────
 
 @mcp.route("/keys/check", methods=["POST"])
+@require_api_key
+@rate_limit
 def check_keys():
     result = run(check_all_keys())
     return jsonify(result)
@@ -78,6 +84,8 @@ def check_keys():
 # ─────────────────────────────────────
 
 @mcp.route("/run-session", methods=["POST"])
+@require_api_key
+@rate_limit
 def run_session():
     data  = request.get_json()
     niche = data.get("niche") if data else None
@@ -140,22 +148,39 @@ def run_session():
                 "error": "Aucun profil valide après enrichissement"
             }), 404
 
-        # ÉTAPE 4 — Filtre Qwen
-        print("[Pipeline] ÉTAPE 4 — Filtre Qwen...")
-        filtered = run(filter_all_profiles(enriched))
+        # ÉTAPE 4 — Filtre (bypass temporaire)
+        print("[Pipeline] ÉTAPE 4 — Filtre bypass...")
+        filtered = enriched
 
-        if not filtered:
-            run(close_session(session_id, "insufficient", started_at, {
-                "error_message": "Aucun profil validé par Qwen"
-            }))
-            return jsonify({"error": "Aucun profil validé par Qwen"}), 404
+        # ÉTAPE 5 — Scoring temporaire
+        print("[Pipeline] ÉTAPE 5 — Scoring...")
+        for p in filtered:
+            is_active = p.get("is_active", False)
+            is_french = p.get("is_french", False)
+            has_wa    = p.get("has_whatsapp", False)
+            sells_dm  = p.get("sells_via_dm", False)
+            has_site  = p.get("has_real_website", False)
 
-        # ÉTAPE 5 — Scoring GLM
-        print("[Pipeline] ÉTAPE 5 — Scoring GLM...")
-        scored = run(score_all_profiles(filtered))
+            score_activite = 15 if is_active else 5
+            score_offre    = 15 if sells_dm or has_wa else 8
+            score_douleur  = 20 if not has_site else 10
+            score_france   = 20 if is_french else 5
+
+            p["score_total"]    = score_activite + score_offre + score_douleur + score_france
+            p["score_activite"] = score_activite
+            p["score_offre"]    = score_offre
+            p["score_douleur"]  = score_douleur
+            p["score_france"]   = score_france
+            p["glm_reason"]     = "Score automatique — IA activée prochainement"
+
+        scored = sorted(
+            filtered,
+            key=lambda x: x["score_total"],
+            reverse=True
+        )
 
         # ÉTAPE 6 — Sauvegarde TOP
-        print("[Pipeline] ÉTAPE 6 — Sauvegarde TOP prospects...")
+        print("[Pipeline] ÉTAPE 6 — Sauvegarde...")
         result = run(save_top_prospects(scored, session_id))
 
         if not result["success"]:
@@ -172,7 +197,7 @@ def run_session():
         }))
 
         output = format_output(result["prospects"])
-        print(f"\n[Session] ✅ Terminée — {result['count']} prospects livrés")
+        print(f"\n[Session] ✅ {result['count']} prospects livrés")
 
         return jsonify({
             "session_id": session_id,
@@ -193,6 +218,7 @@ def run_session():
 # ─────────────────────────────────────
 
 @mcp.route("/prospect/status", methods=["PATCH"])
+@require_api_key
 def update_status():
     data     = request.get_json()
     username = data.get("username")
@@ -221,6 +247,8 @@ def update_status():
 # ─────────────────────────────────────
 
 @mcp.route("/prospects", methods=["GET"])
+@require_api_key
+@rate_limit
 def get_prospects():
     status    = request.args.get("status")
     from db.supabase_client import get_all_prospects
@@ -228,4 +256,19 @@ def get_prospects():
     return jsonify({
         "total":     len(prospects),
         "prospects": prospects
+    })
+
+
+# ─────────────────────────────────────
+# GET /mcp/sessions
+# ─────────────────────────────────────
+
+@mcp.route("/sessions", methods=["GET"])
+@require_api_key
+def get_sessions():
+    from db.supabase_client import get_sessions_last_4h
+    sessions = run(get_sessions_last_4h())
+    return jsonify({
+        "total":    len(sessions),
+        "sessions": sessions
     })
