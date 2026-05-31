@@ -24,6 +24,83 @@ from tools.webhook_quota import (
 
 TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 
+# ─────────────────────────────────────
+# FILTRAGE FRANCE AVANCÉ
+# ─────────────────────────────────────
+
+FRANCE_CITIES = [
+    "paris", "lyon", "marseille", "toulouse",
+    "bordeaux", "lille", "nice", "nantes",
+    "strasbourg", "montpellier", "rennes",
+    "grenoble", "dijon", "angers", "reims",
+    "toulon", "brest", "le havre", "metz",
+    "nancy", "perpignan", "caen", "orléans",
+    "rouen", "clermont", "saint-etienne",
+    "île-de-france", "idf", "var", "paca",
+    "bretagne", "normandie", "alsace",
+    "occitanie", "nouvelle-aquitaine",
+    "auvergne", "hauts-de-france",
+    "provence", "alpes", "corse",
+    "seine", "yvelines", "essonne",
+    "val-de-marne", "val-d'oise",
+    "hauts-de-seine", "seine-et-marne",
+    "seine-saint-denis"
+]
+
+FRANCE_SIGNALS = [
+    "france", "français", "française",
+    "🇫🇷", ".fr", "made in france",
+    "livraison france", "toute la france",
+    "partout en france", "france métro",
+    "métropole", "hexagone"
+]
+
+FRANCE_PHONES = [
+    "+33", "0033",
+    "06 ", "07 ", "06.", "07.",
+    "06-", "07-", "06/", "07/",
+    "01 ", "02 ", "03 ", "04 ", "05 "
+]
+
+FRANCE_EXCLUDE = [
+    "algérie", "algeria", "alger", "oran",
+    "maroc", "morocco", "casablanca", "rabat",
+    "tunisie", "tunisia", "tunis",
+    "sénégal", "dakar", "abidjan",
+    "côte d'ivoire", "cameroun", "douala",
+    "mali", "burkina", "guinée", "congo",
+    "madagascar", "togo", "bénin",
+    "belgique", "bruxelles", "liège",
+    "suisse", "genève", "lausanne",
+    "canada", "québec", "montreal",
+    "haïti", "port-au-prince",
+    "espagne", "spain", "madrid",
+    "italie", "italy", "rome",
+    "🇩🇿", "🇲🇦", "🇹🇳", "🇸🇳", "🇧🇪",
+    "🇨🇭", "🇨🇦", "🇭🇹", "🇨🇲", "🇨🇮",
+    "🇲🇱", "🇧🇫", "🇬🇳", "🇨🇬", "🇲🇬",
+    "🇹🇬", "🇧🇯", "🇪🇸", "🇮🇹",
+]
+
+
+def detect_france(text: str) -> bool:
+    text_lower = text.lower()
+
+    # Signaux exclusion
+    exclude_count = sum(
+        1 for e in FRANCE_EXCLUDE
+        if e.lower() in text_lower
+    )
+    if exclude_count > 0:
+        return False
+
+    # Signaux positifs
+    city_count   = sum(1 for c in FRANCE_CITIES if c in text_lower)
+    signal_count = sum(1 for s in FRANCE_SIGNALS if s.lower() in text_lower)
+    phone_count  = sum(1 for p in FRANCE_PHONES if p in text)
+
+    return (city_count + signal_count + phone_count) >= 1
+
 
 # ─────────────────────────────────────
 # HELPERS
@@ -55,12 +132,7 @@ def get_headers(host: str) -> dict:
 # ─────────────────────────────────────
 
 async def get_profile_looter(username: str) -> dict:
-    """
-    Récupère infos profil via Looter /profile
-    Retourne directement à la racine du JSON
-    """
     if not is_service_active("looter"):
-        print(f"[Looter/Profile] Service désactivé")
         return {}
 
     try:
@@ -71,15 +143,11 @@ async def get_profile_looter(username: str) -> dict:
                 params={"username": username}
             )
             data = r.json()
-
             if is_quota_exceeded(str(data)):
-                print(f"[Looter/Profile] Quota épuisé → change clé dans .env")
                 mark_service_exhausted("looter")
                 return {}
-
             print(f"[Looter/Profile] ✅ @{username}")
             return data
-
     except httpx.ConnectTimeout:
         print(f"[Looter/Profile] Timeout @{username}")
         return {}
@@ -96,7 +164,6 @@ async def scrape_playwright(username: str) -> str:
     url = f"https://www.instagram.com/{username}/"
 
     if not is_service_active("playwright"):
-        print(f"[Playwright] Désactivé → fallback scraper21")
         return await scrape_scraper21(username)
 
     try:
@@ -107,19 +174,14 @@ async def scrape_playwright(username: str) -> str:
                 params={"url": url}
             )
             data = r.json()
-
             if is_quota_exceeded(str(data)):
-                print(f"[Playwright] Quota épuisé → change clé dans .env")
                 mark_service_exhausted("playwright")
                 return await scrape_scraper21(username)
-
             if data.get("success"):
                 print(f"[Playwright] ✅ @{username}")
                 return data.get("text", "")
             return ""
-
     except httpx.ConnectTimeout:
-        print(f"[Playwright] Timeout @{username} → fallback scraper21")
         return await scrape_scraper21(username)
     except Exception as e:
         print(f"[Playwright] Erreur @{username} : {e}")
@@ -127,12 +189,11 @@ async def scrape_playwright(username: str) -> str:
 
 
 # ─────────────────────────────────────
-# SCRAPER21 — fallback signaux
+# SCRAPER21 — fallback
 # ─────────────────────────────────────
 
 async def scrape_scraper21(username: str) -> str:
     if not is_service_active("scraper21"):
-        print(f"[Scraper21] Désactivé")
         return ""
 
     try:
@@ -143,12 +204,9 @@ async def scrape_scraper21(username: str) -> str:
                 params={"username": username}
             )
             data = r.json()
-
             if is_quota_exceeded(str(data)):
-                print(f"[Scraper21] Quota épuisé → change clé dans .env")
                 mark_service_exhausted("scraper21")
                 return ""
-
             posts = data.get("data", {}).get("posts", [])
             text  = " ".join([
                 p.get("caption", "") or ""
@@ -156,10 +214,6 @@ async def scrape_scraper21(username: str) -> str:
             ])
             print(f"[Scraper21] ✅ @{username}")
             return text
-
-    except httpx.ConnectTimeout:
-        print(f"[Scraper21] Timeout @{username}")
-        return ""
     except Exception as e:
         print(f"[Scraper21] Erreur @{username} : {e}")
         return ""
@@ -181,9 +235,7 @@ async def check_website(url: str) -> dict:
                 json={"url": url, "render_js": False}
             )
             data = r.json()
-
             if is_quota_exceeded(str(data)):
-                print(f"[URLMeta] Quota épuisé → change clé dans .env")
                 mark_service_exhausted("urlmeta")
                 return {"valid": False, "type": "unknown"}
 
@@ -206,10 +258,6 @@ async def check_website(url: str) -> dict:
                 "title":       title,
                 "description": description
             }
-
-    except httpx.ConnectTimeout:
-        print(f"[URLMeta] Timeout")
-        return {"valid": False, "type": "timeout"}
     except Exception as e:
         print(f"[URLMeta] Erreur : {e}")
         return {"valid": False, "type": "error"}
@@ -223,10 +271,9 @@ async def enrich_profile(profile: dict) -> dict:
     username = profile["username"]
 
     try:
-        # ÉTAPE 1 — Infos profil via Looter /profile
+        # ÉTAPE 1 — Infos profil via Looter
         data = await get_profile_looter(username)
 
-        # Looter retourne directement à la racine
         bio       = data.get("biography", "") or ""
         ext_link  = data.get("external_url", "") or ""
         followers = (
@@ -243,15 +290,15 @@ async def enrich_profile(profile: dict) -> dict:
         is_professional = data.get("is_professional_account", False)
         is_business     = data.get("is_business_account", False)
 
-        # ÉTAPE 2 — Scraping signaux via Playwright
+        # ÉTAPE 2 — Scraping signaux
         scraped_text = await scrape_playwright(username)
 
-        # ÉTAPE 3 — Vérification site web via URLMeta
+        # ÉTAPE 3 — Vérification site
         site_info = await check_website(ext_link) if ext_link else {
             "valid": False, "type": "none"
         }
 
-        # Texte complet pour analyse
+        # Texte complet
         full_text = f"{bio} {ext_link} {full_name} {scraped_text}"
 
         # Signaux commerciaux
@@ -263,23 +310,26 @@ async def enrich_profile(profile: dict) -> dict:
         has_customer_comments = detect_signals(full_text, SIGNALS_CUSTOMER)
         whatsapp_number       = extract_whatsapp_number(full_text)
         phone_in_bio          = re.findall(
-            r"📞?\s*0[1-9][\d\s]{8,}", bio
+            r"(?:\+33|0033|0[1-7])[\s.\-]?\d{2}[\s.\-]?\d{2}[\s.\-]?\d{2}[\s.\-]?\d{2}",
+            full_text
         )
 
-        # France
-        france_signals = [
-            "france", "paris", "lyon", "marseille",
-            "toulouse", "bordeaux", "lille", "nice",
-            "nantes", "strasbourg", "🇫🇷", ".fr"
-        ]
-        is_french = detect_signals(full_text, france_signals)
+        # ── Détection France avancée ──
+        is_french = detect_france(full_text)
 
         # Validation
         followers_valid = MIN_FOLLOWERS <= followers <= MAX_FOLLOWERS
-        is_active       = (
+
+        # Rejet immédiat si hors France détecté
+        if not is_french and followers_valid:
+            # On garde quand même mais on marque
+            pass
+
+        is_active = (
             posts_count > 0 or
             is_professional or
-            is_business
+            is_business or
+            len(bio) > 20
         )
 
         await asyncio.sleep(random.uniform(2.0, 4.0))
@@ -290,7 +340,6 @@ async def enrich_profile(profile: dict) -> dict:
             f"FR:{is_french} | "
             f"DM:{sells_via_dm} | "
             f"WA:{has_whatsapp} | "
-            f"Site:{site_info.get('type')} | "
             f"valid:{followers_valid}"
         )
 

@@ -55,122 +55,102 @@ NICHES = {
     "ecommerce": {
         "label": "E-commerce & Boutiques en ligne",
         "hashtags": [
-            "boutiqueenligne", "shopenligne",
-            "ventenligne", "modeboutique",
+            "boutiqueenligne",
+            "shopenligne",
+            "ventedirect",
+            "modeenligne",
             "accessoiresfemme"
         ],
-        "google_keywords": [
-            "boutique vêtements france instagram commande",
-            "shop france instagram DM whatsapp",
-        ]
     },
     "beaute": {
         "label": "Services Beauté & Esthétique",
         "hashtags": [
-            "estheticienne", "institutbeaute",
-            "soinsvisage", "manchurage",
-            "beautenaturelle"
+            "estheticienne",
+            "institutbeaute",
+            "onglerie",
+            "manchurage",
+            "soinsbeaute"
         ],
-        "google_keywords": [
-            "esthéticienne france instagram whatsapp",
-            "institut beauté paris instagram contact",
-        ]
     },
     "coiffure": {
         "label": "Coiffure & Barber Shop",
         "hashtags": [
-            "coiffeurafro", "coiffeurparis",
-            "barbershop", "coiffeurlyon",
-            "naturalhair"
+            "coiffeurafro",
+            "barbershop",
+            "coiffuremaison",
+            "tresseafricaine",
+            "coiffurebobo"
         ],
-        "google_keywords": [
-            "coiffeur afro paris instagram",
-            "salon coiffure france instagram whatsapp",
-        ]
     },
     "photo": {
         "label": "Photographie & Création de contenu",
         "hashtags": [
-            "photographe", "photographieparis",
-            "shootingphoto", "portraitphoto",
-            "contentcreator"
+            "photographe",
+            "shootingphoto",
+            "portraitphoto",
+            "photographieprofessionnelle",
+            "reportagephoto"
         ],
-        "google_keywords": [
-            "photographe france instagram tarif DM",
-            "créateur contenu france instagram contact",
-        ]
     },
     "sport": {
         "label": "Coaching Sportif & Fitness",
         "hashtags": [
-            "coachsportif", "coachingfitness",
-            "musculationfrance", "perte de poids",
-            "personnaltrainer"
+            "coachsportif",
+            "coachfitness",
+            "musculationmaison",
+            "poidsetmuscles",
+            "coachperso"
         ],
-        "google_keywords": [
-            "coach sportif france instagram programme",
-            "coach fitness france instagram whatsapp",
-        ]
     },
     "coaching": {
         "label": "Coaching Business & Formation",
         "hashtags": [
-            "coachbusiness", "formationenligne",
-            "entrepreneuriat", "mentorat",
+            "coachbusiness",
+            "entrepreneuriat",
+            "formationenligne",
+            "mentorat",
             "developpementpersonnel"
         ],
-        "google_keywords": [
-            "coach business france instagram formation",
-            "infopreneur france instagram vente DM",
-        ]
     },
     "restauration": {
         "label": "Restauration & Food Business",
         "hashtags": [
-            "restaurant", "foodbusiness",
-            "cuisinefrancaise", "traiteur",
-            "chefcuisinier"
+            "chefcuisinier",
+            "traiteur",
+            "cuisinemaison",
+            "repaslivraison",
+            "cuisineduchef"
         ],
-        "google_keywords": [
-            "restaurant france instagram commande whatsapp",
-            "food business france instagram DM",
-        ]
     },
     "patisserie": {
         "label": "Pâtisserie & Traiteurs",
         "hashtags": [
-            "patisserie", "gateau",
-            "cakeparis", "patisseriemaison",
-            "traiteurparis"
+            "patisseriemaison",
+            "gateausurcommande",
+            "cakedesign",
+            "patissierartisan",
+            "chouquettes"
         ],
-        "google_keywords": [
-            "pâtisserie france instagram commande",
-            "traiteur france instagram whatsapp contact",
-        ]
     },
     "immobilier": {
         "label": "Immobilier & Agences",
         "hashtags": [
-            "immobilier", "agentimmobilier",
-            "investissementimmobilier", "achatimmobilier",
-            "locationappartement"
+            "agentimmobilier",
+            "investissementimmobilier",
+            "achatappartement",
+            "locationappartement",
+            "immobilierneuf"
         ],
-        "google_keywords": [
-            "agent immobilier france instagram contact",
-            "agence immobilière france instagram DM",
-        ]
     },
     "creatifs": {
         "label": "Freelances Créatifs",
         "hashtags": [
-            "graphiste", "videoaste",
-            "designeur", "montagevideos",
-            "creatifdigital"
+            "graphiste",
+            "videoaste",
+            "montagevideos",
+            "designgraphique",
+            "creationcontenu"
         ],
-        "google_keywords": [
-            "graphiste france instagram tarif contact",
-            "vidéaste france instagram DM whatsapp",
-        ]
     }
 }
 

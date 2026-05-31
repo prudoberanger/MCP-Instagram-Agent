@@ -95,7 +95,6 @@ def run_session():
             "error": f"Niche invalide. Disponibles : {list(NICHES.keys())}"
         }), 400
 
-    # Vérif quota
     try:
         run(quota_manager.guard())
     except PermissionError as e:
@@ -148,39 +147,101 @@ def run_session():
                 "error": "Aucun profil valide après enrichissement"
             }), 404
 
-        # ÉTAPE 4 — Filtre (bypass temporaire)
-        print("[Pipeline] ÉTAPE 4 — Filtre bypass...")
-        filtered = enriched
+        # ÉTAPE 4 — Filtre France strict
+        print("[Pipeline] ÉTAPE 4 — Filtre France strict...")
+        france_profiles = [p for p in enriched if p.get("is_french")]
 
-        # ÉTAPE 5 — Scoring temporaire
-        print("[Pipeline] ÉTAPE 5 — Scoring...")
+        if len(france_profiles) >= 5:
+            filtered = france_profiles
+            print(f"[Pipeline] France → {len(filtered)} profils retenus")
+        else:
+            filtered = enriched
+            print(f"[Pipeline] Filtre France trop strict → garde tout")
+
+        # ÉTAPE 5 — Scoring ultra renforcé
+        print("[Pipeline] ÉTAPE 5 — Scoring ultra renforcé...")
         for p in filtered:
-            is_active = p.get("is_active", False)
-            is_french = p.get("is_french", False)
-            has_wa    = p.get("has_whatsapp", False)
-            sells_dm  = p.get("sells_via_dm", False)
-            has_site  = p.get("has_real_website", False)
+            is_active  = p.get("is_active", False)
+            is_french  = p.get("is_french", False)
+            has_wa     = p.get("has_whatsapp", False)
+            sells_dm   = p.get("sells_via_dm", False)
+            has_site   = p.get("has_real_website", False)
+            has_link   = p.get("has_linktree", False)
+            followers  = p.get("followers", 0)
+            bio        = p.get("bio", "") or ""
+            phone      = p.get("phone_in_bio", [])
+            posts      = p.get("posts_count", 0)
 
-            score_activite = 15 if is_active else 5
-            score_offre    = 15 if sells_dm or has_wa else 8
-            score_douleur  = 20 if not has_site else 10
-            score_france   = 20 if is_french else 5
+            # Score activité /25
+            if is_active and posts > 10:
+                score_activite = 25
+            elif is_active:
+                score_activite = 15
+            else:
+                score_activite = 5
 
-            p["score_total"]    = score_activite + score_offre + score_douleur + score_france
+            # Score offre /25
+            if has_wa and sells_dm:
+                score_offre = 25
+            elif has_wa or sells_dm or phone:
+                score_offre = 18
+            elif len(bio) > 50:
+                score_offre = 10
+            else:
+                score_offre = 5
+
+            # Score douleur /30
+            if not has_site and not has_link and (has_wa or sells_dm):
+                score_douleur = 30
+            elif not has_site and (has_wa or sells_dm):
+                score_douleur = 22
+            elif not has_site:
+                score_douleur = 15
+            elif has_link:
+                score_douleur = 10
+            else:
+                score_douleur = 5
+
+            # Score France /20
+            score_france = 20 if is_french else 0
+
+            score_total = (
+                score_activite +
+                score_offre +
+                score_douleur +
+                score_france
+            )
+
+            # Bonus followers 1k-5k
+            if 1000 <= followers <= 5000:
+                score_total = min(score_total + 5, 100)
+
+            # Pénalité bio vide
+            if len(bio) < 10:
+                score_total = max(score_total - 15, 0)
+
+            # Pénalité hors France
+            if not is_french:
+                score_total = max(score_total - 20, 0)
+
+            p["score_total"]    = score_total
             p["score_activite"] = score_activite
             p["score_offre"]    = score_offre
             p["score_douleur"]  = score_douleur
             p["score_france"]   = score_france
-            p["glm_reason"]     = "Score automatique — IA activée prochainement"
+            p["glm_reason"]     = "Score renforcé v2"
 
+        # Tri par score
         scored = sorted(
             filtered,
             key=lambda x: x["score_total"],
             reverse=True
         )
 
+        print(f"[Pipeline] {len(scored)} prospects après scoring")
+
         # ÉTAPE 6 — Sauvegarde TOP
-        print("[Pipeline] ÉTAPE 6 — Sauvegarde...")
+        print("[Pipeline] ÉTAPE 6 — Sauvegarde TOP prospects...")
         result = run(save_top_prospects(scored, session_id))
 
         if not result["success"]:
